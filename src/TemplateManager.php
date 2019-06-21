@@ -8,66 +8,93 @@ class TemplateManager
             throw new \RuntimeException('no tpl given');
         }
 
-        $replaced = clone($tpl);
-        $replaced->subject = $this->computeText($replaced->subject, $data);
-        $replaced->content = $this->computeText($replaced->content, $data);
+        $templateData = $this->prepareTemplateData($data);
 
+
+        $replaced = clone($tpl);
+
+        foreach ($templateData as $key => $value) {
+            $replaced->subject = preg_replace('/\[' . $key . '\]/', $value, $replaced->subject);
+            $replaced->content = preg_replace('/\[' . $key . '\]/', $value, $replaced->content);
+        }
         return $replaced;
     }
 
-    private function computeText($text, array $data)
+    /**
+     * Prepare template data
+     * @param $data array
+     * @return array
+     */
+    private function prepareTemplateData($data)
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
-        $quote = (isset($data['quote']) and $data['quote'] instanceof Quote) ? $data['quote'] : null;
-
-        if ($quote)
-        {
-            $_quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
-            $usefulObject = SiteRepository::getInstance()->getById($quote->siteId);
-            $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
-
-            if(strpos($text, '[quote:destination_link]') !== false){
-                $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
-            }
-
-            $containsSummaryHtml = strpos($text, '[quote:summary_html]');
-            $containsSummary     = strpos($text, '[quote:summary]');
-
-            if ($containsSummaryHtml !== false || $containsSummary !== false) {
-                if ($containsSummaryHtml !== false) {
-                    $text = str_replace(
-                        '[quote:summary_html]',
-                        Quote::renderHtml($_quoteFromRepository),
-                        $text
-                    );
-                }
-                if ($containsSummary !== false) {
-                    $text = str_replace(
-                        '[quote:summary]',
-                        Quote::renderText($_quoteFromRepository),
-                        $text
-                    );
-                }
-            }
-
-            (strpos($text, '[quote:destination_name]') !== false) and $text = str_replace('[quote:destination_name]',$destinationOfQuote->countryName,$text);
+        $quote = $this->getQuote($data['quote']);
+        if ($quote === null) {
+            throw new InvalidArgumentException('Quote infos missed !');
         }
 
-        if (isset($destination))
-            $text = str_replace('[quote:destination_link]', $usefulObject->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, $text);
-        else
-            $text = str_replace('[quote:destination_link]', '', $text);
+        $site = $this->getSite($quote->siteId);
+        $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
+        $user = $this->getUser(isset($data['user']) ? $data['user'] : null);
 
-        /*
-         * USER
-         * [user:*]
-         */
-        $_user  = (isset($data['user'])  and ($data['user']  instanceof User))  ? $data['user']  : $APPLICATION_CONTEXT->getCurrentUser();
-        if($_user) {
-            (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]'       , ucfirst(mb_strtolower($_user->firstname)), $text);
+        $templateData = [
+            'quote:summary_html' => Quote::renderHtml($quote),
+            'quote:summary' => Quote::renderText($quote),
+            'quote:destination_name' => $destination->countryName,
+            'quote:destination_link' => $site->url . '/' . $destination->countryName . '/quote/' . $quote->id
+        ];
+        if ($user) {
+            $templateData['user:first_name'] = ucfirst(mb_strtolower($user->firstname));
         }
 
-        return $text;
+
+        return $templateData;
+
     }
+
+    /**
+     * Get a Site instance from repos or Context App
+     * @param $siteId int
+     * @return Site
+     */
+    private function getSite($siteId)
+    {
+        $site = SiteRepository::getInstance()->getById($siteId);
+
+        if (empty($site)) {
+            $site = ApplicationContext::getInstance()->getCurrentSite();
+        }
+
+        return $site;
+    }
+
+    /**
+     * Check Quote instance or get it from repos
+     * @param $quote
+     * @return null|Quote
+     */
+    private function getQuote($quote)
+    {
+        if (isset($quote) and $quote instanceof Quote) {
+            return $quote;
+        } elseif (is_int($quote)) {
+            return QuoteRepository::getInstance()->getById($quote);
+        }
+        return null;
+    }
+
+    /**
+     * Check User instance or get it from  Context App
+     * @param $user
+     * @return User
+     */
+    private function getUser($user)
+    {
+        if ($user instanceof User) {
+            return $user;
+        }
+        return ApplicationContext::getInstance()->getCurrentUser();
+    }
+
+
 }
