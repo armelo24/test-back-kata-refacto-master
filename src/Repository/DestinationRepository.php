@@ -1,5 +1,10 @@
 <?php
 
+namespace App\Repository;
+
+use App\Entity\Destination;
+use App\Helper\SingletonTrait;
+
 class DestinationRepository implements Repository
 {
     use SingletonTrait;
@@ -13,9 +18,9 @@ class DestinationRepository implements Repository
      */
     public function __construct()
     {
-        $this->country = Faker\Factory::create()->country;
+        $this->country = \Faker\Factory::create()->country;
         $this->conjunction = 'en';
-        $this->computerName = Faker\Factory::create()->slug();
+        $this->computerName = \Faker\Factory::create()->slug();
     }
 
     /**

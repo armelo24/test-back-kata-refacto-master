@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 class Destination
 {
     public $id;

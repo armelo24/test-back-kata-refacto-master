@@ -1,5 +1,13 @@
 <?php
 
+namespace App;
+
+use App\Context\ApplicationContext;
+use App\Entity\Quote;
+use App\Entity\Template;
+use App\Repository\DestinationRepository;
+use App\Repository\SiteRepository;
+
 class TemplateManager
 {
     public function getTemplateComputed(Template $tpl, array $data)
@@ -8,7 +16,12 @@ class TemplateManager
             throw new \RuntimeException('no tpl given');
         }
 
-        $templateData = $this->prepareTemplateData($data);
+        try{
+            $templateData = $this->prepareTemplateData($data);
+        }catch (\InvalidArgumentException $e){
+            exit($e->getMessage());
+        }
+
 
 
         $replaced = clone($tpl);
@@ -29,8 +42,9 @@ class TemplateManager
     {
 
         $quote = $this->getQuote($data['quote']);
+
         if ($quote === null) {
-            throw new InvalidArgumentException('Quote infos missed !');
+            throw new \InvalidArgumentException('Quote infos missed !');
         }
 
         $site = $this->getSite($quote->siteId);
@@ -75,7 +89,7 @@ class TemplateManager
      */
     private function getQuote($quote)
     {
-        if (isset($quote) and $quote instanceof Quote) {
+        if (isset($quote) && $quote instanceof Quote) {
             return $quote;
         } elseif (is_int($quote)) {
             return QuoteRepository::getInstance()->getById($quote);
