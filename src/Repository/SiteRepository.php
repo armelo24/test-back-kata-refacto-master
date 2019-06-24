@@ -15,7 +15,7 @@ class SiteRepository implements Repository
      * SiteRepository constructor.
      *
      */
-    public function __construct()
+    protected function __construct()
     {
         // DO NOT MODIFY THIS METHOD
         $this->url = \Faker\Factory::create()->url;

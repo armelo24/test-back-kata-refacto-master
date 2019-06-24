@@ -16,12 +16,11 @@ class TemplateManager
             throw new \RuntimeException('no tpl given');
         }
 
-        try{
+        try {
             $templateData = $this->prepareTemplateData($data);
-        }catch (\InvalidArgumentException $e){
+        } catch (\InvalidArgumentException $e) {
             exit($e->getMessage());
         }
-
 
 
         $replaced = clone($tpl);
@@ -54,11 +53,11 @@ class TemplateManager
         $templateData = [
             'quote:summary_html' => Quote::renderHtml($quote),
             'quote:summary' => Quote::renderText($quote),
-            'quote:destination_name' => $destination->countryName,
-            'quote:destination_link' => $site->url . '/' . $destination->countryName . '/quote/' . $quote->id
+            'quote:destination_name' => $destination->getComputerName(),
+            'quote:destination_link' => $site->getUrl() . '/' . $destination->getCountryName() . '/quote/' . $quote->id
         ];
         if ($user) {
-            $templateData['user:first_name'] = ucfirst(mb_strtolower($user->firstname));
+            $templateData['user:first_name'] = ucfirst(mb_strtolower($user->getFirstname()));
         }
 
 

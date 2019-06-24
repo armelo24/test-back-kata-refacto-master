@@ -19,11 +19,16 @@ www.evaneos.com
 ");
 $templateManager = new \App\TemplateManager();
 
-$message = $templateManager->getTemplateComputed(
-    $template,
-    [
-        'quote' => new \App\Entity\Quote($faker->randomNumber(), $faker->randomNumber(), $faker->randomNumber(), $faker->date())
-    ]
-);
+try{
+    $message = $templateManager->getTemplateComputed(
+        $template,
+        [
+            'quote' => new \App\Entity\Quote($faker->randomNumber(), $faker->randomNumber(), $faker->randomNumber(), $faker->date())
+        ]
+    );
+
+}catch (\InvalidArgumentException $e){
+    exit($e->getMessage());
+}
 
 echo $message->subject . "\n" . $message->content;
