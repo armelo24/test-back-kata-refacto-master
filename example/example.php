@@ -27,7 +27,7 @@ try{
         ]
     );
 
-}catch (\InvalidArgumentException $e){
+}catch (\Exception $e){
     exit($e->getMessage());
 }
 

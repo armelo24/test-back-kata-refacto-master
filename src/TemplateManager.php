@@ -15,14 +15,7 @@ class TemplateManager
         if (!$tpl) {
             throw new \RuntimeException('no tpl given');
         }
-
-        try {
-            $templateData = $this->prepareTemplateData($data);
-        } catch (\InvalidArgumentException $e) {
-            exit($e->getMessage());
-        }
-
-
+        $templateData = $this->prepareTemplateData($data);
         $replaced = clone($tpl);
 
         foreach ($templateData as $key => $value) {
